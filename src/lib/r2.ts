@@ -83,6 +83,32 @@ export async function getNewestSongs(limit: number = 10): Promise<Song[]> {
     .slice(0, limit);
 }
 
+export async function getSongByKey(key: string): Promise<Song | null> {
+  const client = getClient();
+  const command = new ListObjectsV2Command({
+    Bucket: R2_BUCKET_NAME!,
+    Prefix: key,
+    MaxKeys: 1,
+  });
+
+  const response = await client.send(command);
+  const obj = response.Contents?.[0];
+  if (!obj || obj.Key !== key) return null;
+
+  const audioExtensions = [".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".wma"];
+  if (!audioExtensions.some((ext) => key.toLowerCase().endsWith(ext))) {
+    return null;
+  }
+
+  return {
+    key: obj.Key!,
+    title: sanitizeTitle(obj.Key!),
+    size: obj.Size || 0,
+    lastModified: obj.LastModified || new Date(),
+    url: await getSongUrl(obj.Key!),
+  };
+}
+
 export async function getSongUrl(key: string): Promise<string> {
   // If public URL is configured, use it directly
   if (R2_PUBLIC_URL) {

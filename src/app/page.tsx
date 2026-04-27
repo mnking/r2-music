@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Music2, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AudioPlayer from "@/components/AudioPlayer";
@@ -9,7 +10,8 @@ import NewestSongs from "@/components/NewestSongs";
 import { Song } from "@/lib/r2";
 import { trackPlay } from "@/lib/supabase";
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
   const [songs, setSongs] = useState<Song[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -36,6 +38,17 @@ export default function Home() {
   useEffect(() => {
     fetchSongs();
   }, [fetchSongs]);
+
+  // Auto-play song from ?play= query param (coming from detail page)
+  useEffect(() => {
+    const playKey = searchParams.get("play");
+    if (!playKey || songs.length === 0) return;
+    const song = songs.find((s) => s.key === decodeURIComponent(playKey));
+    if (song) {
+      setCurrentSong(song);
+      setIsPlaying(true);
+    }
+  }, [searchParams, songs]);
 
   const handleSongSelect = useCallback((song: Song) => {
     setCurrentSong((prev) => {
@@ -132,5 +145,20 @@ export default function Home() {
         onSongChange={handleSongSelect}
       />
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#121212] text-white pb-32">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          <div className="animate-pulse h-8 bg-[#181818] rounded w-48 mb-4" />
+          <div className="animate-pulse h-64 bg-[#181818] rounded" />
+        </div>
+      </main>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

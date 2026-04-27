@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Search, Play, Music, Clock, HardDrive, Pause } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Song } from "@/lib/r2";
@@ -162,13 +163,15 @@ export default function SongList({
                     <Music className={`w-4 h-4 ${isCurrentSong ? "text-[#1db954]" : "text-[#b3b3b3]"}`} />
                   </div>
                   <div className="min-w-0">
-                    <p
-                      className={`text-sm font-medium truncate ${
+                    <Link
+                      href={`/songs/${encodeURIComponent(song.key)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`text-sm font-medium truncate hover:underline ${
                         isCurrentSong ? "text-[#1db954]" : "text-white"
                       }`}
                     >
                       {song.title}
-                    </p>
+                    </Link>
                     <p className="text-xs text-[#b3b3b3] truncate">
                       Audio file
                     </p>

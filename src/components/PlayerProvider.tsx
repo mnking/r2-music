@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { Song } from "@/lib/r2";
-import { trackPlay } from "@/lib/supabase";
+import { trackPlay } from "@/lib/plays";
 
 interface PlayerContextType {
   currentSong: Song | null;

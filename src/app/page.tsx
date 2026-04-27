@@ -6,6 +6,7 @@ import { Music2, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SongList from "@/components/SongList";
 import NewestSongs from "@/components/NewestSongs";
+import MostPlayedSongs from "@/components/MostPlayedSongs";
 import { usePlayer } from "@/components/PlayerProvider";
 
 function HomeContent() {
@@ -96,6 +97,9 @@ function HomeContent() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6">
+        {/* Most Played Songs */}
+        {!error && <MostPlayedSongs />}
+
         {/* Newest Songs */}
         {!error && <NewestSongs />}
 

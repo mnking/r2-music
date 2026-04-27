@@ -6,9 +6,10 @@ export async function GET() {
     const songs = await getNewestSongs(10);
     return NextResponse.json({ songs });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error fetching newest songs:", error);
     return NextResponse.json(
-      { error: "Failed to fetch newest songs" },
+      { error: "Failed to fetch newest songs", details: message },
       { status: 500 }
     );
   }

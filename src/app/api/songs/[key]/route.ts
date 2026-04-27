@@ -25,9 +25,10 @@ export async function GET(
       status: 200,
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error streaming song:", error);
     return NextResponse.json(
-      { error: "Failed to stream song" },
+      { error: "Failed to stream song", details: message },
       { status: 500 }
     );
   }

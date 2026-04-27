@@ -9,9 +9,10 @@ export async function GET(request: Request) {
     const songs = await listSongs(prefix);
     return NextResponse.json({ songs });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error listing songs:", error);
     return NextResponse.json(
-      { error: "Failed to list songs" },
+      { error: "Failed to list songs", details: message },
       { status: 500 }
     );
   }

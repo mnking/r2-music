@@ -78,6 +78,13 @@ export async function getSongUrl(key: string): Promise<string> {
   return `/api/songs/${encodeURIComponent(key)}`;
 }
 
+export async function getNewestSongs(limit: number = 10): Promise<Song[]> {
+  const songs = await listSongs();
+  return songs
+    .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
+    .slice(0, limit);
+}
+
 export async function streamSong(key: string) {
   const command = new GetObjectCommand({
     Bucket: R2_BUCKET_NAME,

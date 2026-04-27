@@ -5,6 +5,7 @@ import { Music2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AudioPlayer from "@/components/AudioPlayer";
 import SongList from "@/components/SongList";
+import NewestSongs from "@/components/NewestSongs";
 import { Song } from "@/lib/r2";
 import { trackPlay } from "@/lib/supabase";
 
@@ -91,6 +92,15 @@ export default function Home() {
               Retry
             </Button>
           </div>
+        )}
+
+        {/* Newest Songs */}
+        {!error && (
+          <NewestSongs
+            currentSong={currentSong}
+            isPlaying={isPlaying}
+            onSongSelect={handleSongSelect}
+          />
         )}
 
         {/* Song List */}

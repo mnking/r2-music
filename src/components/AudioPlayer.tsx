@@ -8,9 +8,8 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
-  ListMusic,
+  Music2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Song } from "@/lib/r2";
 
@@ -119,7 +118,7 @@ export default function AudioPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800 px-4 py-3 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#181818] border-t border-white/10 px-4 py-3 z-50">
       <audio
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
@@ -129,92 +128,93 @@ export default function AudioPlayer({
         onPause={() => setIsPlaying(false)}
       />
 
-      {/* Progress bar */}
-      <div className="mb-3">
-        <Slider
-          value={[currentTime]}
-          max={duration || 100}
-          step={0.1}
-          onValueChange={handleSeek}
-          className="w-full cursor-pointer"
-        />
-        <div className="flex justify-between text-xs text-zinc-500 mt-1">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <div className="flex items-center justify-between max-w-screen-2xl mx-auto gap-4">
         {/* Song info */}
-        <div className="flex items-center gap-3 w-1/3">
-          <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center flex-shrink-0">
-            <ListMusic className="w-5 h-5 text-zinc-400" />
+        <div className="flex items-center gap-4 w-[30%] min-w-0">
+          <div className="w-14 h-14 bg-[#282828] rounded flex items-center justify-center flex-shrink-0">
+            {currentSong ? (
+              <Music2 className="w-6 h-6 text-[#b3b3b3]" />
+            ) : (
+              <Music2 className="w-6 h-6 text-[#535353]" />
+            )}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-zinc-100 truncate">
+            <p className="text-sm font-medium text-white truncate">
               {currentSong?.title || "No song selected"}
             </p>
-            <p className="text-xs text-zinc-500 truncate">
+            <p className="text-xs text-[#b3b3b3] truncate">
               {currentSong ? `${(currentSong.size / 1024 / 1024).toFixed(1)} MB` : "Select a song to play"}
             </p>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-2 justify-center w-1/3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
-            onClick={playPrevious}
-            disabled={songs.length === 0}
-          >
-            <SkipBack className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-12 h-12 text-zinc-100 hover:text-white hover:bg-zinc-800"
-            onClick={togglePlay}
-            disabled={!currentSong}
-          >
-            {isPlaying ? (
-              <Pause className="w-6 h-6" />
-            ) : (
-              <Play className="w-6 h-6 ml-0.5" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
-            onClick={playNext}
-            disabled={songs.length === 0}
-          >
-            <SkipForward className="w-5 h-5" />
-          </Button>
+        {/* Controls & Progress */}
+        <div className="flex flex-col items-center gap-1 flex-1 max-w-[40%]">
+          {/* Controls */}
+          <div className="flex items-center gap-4">
+            <button
+              className="text-[#b3b3b3] hover:text-white transition-colors"
+              onClick={playPrevious}
+              disabled={songs.length === 0}
+            >
+              <SkipBack className="w-5 h-5" />
+            </button>
+            <button
+              className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50"
+              onClick={togglePlay}
+              disabled={!currentSong}
+            >
+              {isPlaying ? (
+                <Pause className="w-5 h-5 text-black" />
+              ) : (
+                <Play className="w-5 h-5 text-black ml-0.5" />
+              )}
+            </button>
+            <button
+              className="text-[#b3b3b3] hover:text-white transition-colors"
+              onClick={playNext}
+              disabled={songs.length === 0}
+            >
+              <SkipForward className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Progress bar */}
+          <div className="flex items-center gap-2 w-full">
+            <span className="text-xs text-[#b3b3b3] w-10 text-right tabular-nums">
+              {formatTime(currentTime)}
+            </span>
+            <Slider
+              value={[currentTime]}
+              max={duration || 100}
+              step={0.1}
+              onValueChange={handleSeek}
+              className="flex-1 cursor-pointer [&_[role=slider]]:bg-white [&_[role=slider]]:border-0 [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_.bg-primary]:bg-white [&_.bg-primary]:opacity-100 hover:[&_.bg-primary]:bg-[#1db954]"
+            />
+            <span className="text-xs text-[#b3b3b3] w-10 tabular-nums">
+              {formatTime(duration)}
+            </span>
+          </div>
         </div>
 
         {/* Volume */}
-        <div className="flex items-center gap-2 justify-end w-1/3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+        <div className="flex items-center gap-2 w-[30%] justify-end">
+          <button
+            className="text-[#b3b3b3] hover:text-white transition-colors"
             onClick={toggleMute}
           >
             {isMuted || volume === 0 ? (
-              <VolumeX className="w-4 h-4" />
+              <VolumeX className="w-5 h-5" />
             ) : (
-              <Volume2 className="w-4 h-4" />
+              <Volume2 className="w-5 h-5" />
             )}
-          </Button>
+          </button>
           <Slider
             value={[isMuted ? 0 : volume]}
             max={1}
             step={0.01}
             onValueChange={handleVolumeChange}
-            className="w-24"
+            className="w-24 cursor-pointer [&_[role=slider]]:bg-white [&_[role=slider]]:border-0 [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_.bg-primary]:bg-white"
           />
         </div>
       </div>

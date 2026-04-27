@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Play, Clock, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback } from "react";
+import { Play, Clock, Pause } from "lucide-react";
 import { Song } from "@/lib/r2";
 
 interface NewestSongsProps {
@@ -18,7 +17,7 @@ export default function NewestSongs({
 }: NewestSongsProps) {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [hoveredSong, setHoveredSong] = useState<string | null>(null);
 
   const fetchNewest = useCallback(async () => {
     try {
@@ -38,16 +37,6 @@ export default function NewestSongs({
     fetchNewest();
   }, [fetchNewest]);
 
-  const scroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      const scrollAmount = 320;
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
-
   const formatDate = (date: Date) => {
     const d = new Date(date);
     const now = new Date();
@@ -65,19 +54,18 @@ export default function NewestSongs({
 
   if (isLoading) {
     return (
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-4 h-4 text-violet-400" />
-          <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
-            Newest Uploads
-          </h2>
-        </div>
-        <div className="flex gap-3 overflow-hidden">
+      <div className="mb-8">
+        <div className="h-8 bg-[#181818] rounded animate-pulse w-48 mb-5" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="flex-shrink-0 w-64 h-20 bg-zinc-900 rounded-lg animate-pulse"
-            />
+              className="bg-[#181818] rounded-lg p-4 animate-pulse"
+            >
+              <div className="w-full aspect-square bg-[#282828] rounded-md mb-4" />
+              <div className="h-4 bg-[#282828] rounded w-3/4 mb-2" />
+              <div className="h-3 bg-[#282828] rounded w-1/2" />
+            </div>
           ))}
         </div>
       </div>
@@ -87,108 +75,75 @@ export default function NewestSongs({
   if (songs.length === 0) return null;
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-violet-400" />
-          <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
-            Newest Uploads
-          </h2>
-          <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded-full">
-            Top {songs.length}
-          </span>
-        </div>
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
-            onClick={() => scroll("left")}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
-            onClick={() => scroll("right")}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+    <div className="mb-10">
+      <h2 className="text-2xl font-bold tracking-tight mb-5">
+        Newest Uploads
+      </h2>
 
-      <div
-        ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {songs.map((song, index) => {
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {songs.map((song) => {
           const isCurrent = currentSong?.key === song.key;
+          const isHovered = hoveredSong === song.key;
           return (
-            <button
+            <div
               key={song.key}
+              className="group relative bg-[#181818] hover:bg-[#282828] rounded-lg p-4 cursor-pointer transition-colors duration-300"
               onClick={() => onSongSelect(song)}
-              className={`group flex-shrink-0 w-64 text-left rounded-xl border transition-all duration-200 hover:scale-[1.02] ${
-                isCurrent
-                  ? "bg-violet-950/30 border-violet-800/50"
-                  : "bg-zinc-900/60 border-zinc-800/50 hover:bg-zinc-800 hover:border-zinc-700"
-              }`}
+              onMouseEnter={() => setHoveredSong(song.key)}
+              onMouseLeave={() => setHoveredSong(null)}
             >
-              <div className="flex items-center gap-3 p-3">
-                {/* Rank badge */}
-                <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
-                    index === 0
-                      ? "bg-amber-500/20 text-amber-400"
-                      : index === 1
-                      ? "bg-zinc-400/20 text-zinc-300"
-                      : index === 2
-                      ? "bg-orange-600/20 text-orange-400"
-                      : "bg-zinc-800 text-zinc-500"
-                  }`}
+              {/* Album art placeholder */}
+              <div className="relative w-full aspect-square bg-[#282828] group-hover:bg-[#383838] rounded-md mb-4 flex items-center justify-center transition-colors">
+                <svg
+                  className="w-12 h-12 text-[#535353]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1"
                 >
-                  {index + 1}
-                </div>
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
 
-                {/* Play icon / indicator */}
+                {/* Play button overlay */}
                 <div
-                  className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                    isCurrent && isPlaying
-                      ? "bg-violet-600 text-white"
-                      : "bg-zinc-800 text-zinc-400 group-hover:text-zinc-200"
+                  className={`absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full flex items-center justify-center shadow-lg shadow-black/30 transition-all duration-300 ${
+                    isHovered || isCurrent
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-2"
                   }`}
                 >
                   {isCurrent && isPlaying ? (
-                    <div className="flex gap-0.5 items-end h-3.5">
-                      <div className="w-0.5 bg-current animate-[bounce_1s_infinite] h-2" />
-                      <div className="w-0.5 bg-current animate-[bounce_1.2s_infinite] h-3.5" />
-                      <div className="w-0.5 bg-current animate-[bounce_0.8s_infinite] h-2.5" />
-                    </div>
+                    <Pause className="w-5 h-5 text-black" />
                   ) : (
-                    <Play className="w-4 h-4 ml-0.5" />
+                    <Play className="w-5 h-5 text-black ml-0.5" />
                   )}
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-medium truncate ${
-                      isCurrent ? "text-violet-300" : "text-zinc-200"
-                    }`}
-                  >
-                    {song.title}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatDate(song.lastModified)}
-                    </span>
-                    <span>{(song.size / 1024 / 1024).toFixed(1)} MB</span>
+                {/* Playing indicator */}
+                {isCurrent && isPlaying && !isHovered && (
+                  <div className="absolute bottom-2 right-2 flex gap-0.5 items-end h-4 bg-black/60 rounded px-1.5 py-1">
+                    <div className="w-0.5 bg-[#1db954] animate-[bounce_1s_infinite] h-2" />
+                    <div className="w-0.5 bg-[#1db954] animate-[bounce_1.2s_infinite] h-4" />
+                    <div className="w-0.5 bg-[#1db954] animate-[bounce_0.8s_infinite] h-3" />
                   </div>
-                </div>
+                )}
               </div>
-            </button>
+
+              {/* Info */}
+              <h3
+                className={`text-sm font-semibold truncate mb-1 ${
+                  isCurrent ? "text-[#1db954]" : "text-white"
+                }`}
+              >
+                {song.title}
+              </h3>
+              <div className="flex items-center gap-1.5 text-xs text-[#b3b3b3]">
+                <Clock className="w-3 h-3" />
+                <span>{formatDate(song.lastModified)}</span>
+              </div>
+            </div>
           );
         })}
       </div>

@@ -3,15 +3,13 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Download,
-  Play,
   Music,
   HardDrive,
-  Clock,
   Calendar,
   FileAudio,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { getSongByKey } from "@/lib/r2";
+import PlayButton from "@/components/PlayButton";
 
 interface Props {
   params: Promise<{ key: string }>;
@@ -38,26 +36,11 @@ export default async function SongDetailPage({ params }: Props) {
   };
 
   const getFileExtension = (key: string) => {
-    const ext = key.split(".").pop()?.toUpperCase() || "UNKNOWN";
-    return ext;
-  };
-
-  const getMimeType = (key: string) => {
-    const ext = key.split(".").pop()?.toLowerCase();
-    const types: Record<string, string> = {
-      mp3: "audio/mpeg",
-      wav: "audio/wav",
-      flac: "audio/flac",
-      aac: "audio/aac",
-      ogg: "audio/ogg",
-      m4a: "audio/mp4",
-      wma: "audio/x-ms-wma",
-    };
-    return types[ext || ""] || "audio/mpeg";
+    return key.split(".").pop()?.toUpperCase() || "UNKNOWN";
   };
 
   return (
-    <main className="min-h-screen bg-[#121212] text-white">
+    <main className="min-h-screen bg-[#121212] text-white pb-32">
       {/* Header gradient */}
       <div className="bg-gradient-to-b from-[#1a3a2e] via-[#16213e]/60 to-[#121212] pb-8">
         <div className="max-w-3xl mx-auto px-6 pt-6">
@@ -96,11 +79,7 @@ export default async function SongDetailPage({ params }: Props) {
       {/* Actions */}
       <div className="max-w-3xl mx-auto px-6 py-6">
         <div className="flex items-center gap-4 mb-10">
-          <Link href={`/?play=${encodeURIComponent(song.key)}`}>
-            <Button className="w-14 h-14 rounded-full bg-[#1db954] hover:bg-[#1ed760] hover:scale-105 transition-all flex items-center justify-center">
-              <Play className="w-6 h-6 text-black ml-0.5" />
-            </Button>
-          </Link>
+          <PlayButton song={song} />
 
           <a
             href={song.url}
@@ -152,16 +131,6 @@ export default async function SongDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Audio preview */}
-        <div className="mt-6 bg-[#181818] rounded-xl p-6">
-          <h2 className="text-lg font-bold mb-4">Preview</h2>
-          <audio
-            controls
-            className="w-full [&::-webkit-media-controls-panel]:bg-[#282828] [&::-webkit-media-controls-current-time-display]:text-white [&::-webkit-media-controls-time-remaining-display]:text-white"
-            src={song.url}
-          />
         </div>
       </div>
     </main>

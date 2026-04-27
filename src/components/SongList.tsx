@@ -2,26 +2,17 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Search, Play, Music, Clock, HardDrive, Pause } from "lucide-react";
+import { Search, Play, Music, Pause } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Song } from "@/lib/r2";
+import { usePlayer } from "@/components/PlayerProvider";
 
 interface SongListProps {
-  songs: Song[];
-  currentSong: Song | null;
-  isPlaying: boolean;
-  onSongSelect: (song: Song) => void;
   isLoading: boolean;
 }
 
-export default function SongList({
-  songs,
-  currentSong,
-  isPlaying,
-  onSongSelect,
-  isLoading,
-}: SongListProps) {
+export default function SongList({ isLoading }: SongListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { songs, currentSong, isPlaying, playSong } = usePlayer();
 
   const filteredSongs = useMemo(() => {
     if (!searchQuery.trim()) return songs;
@@ -39,16 +30,6 @@ export default function SongList({
       day: "numeric",
       year: "numeric",
     });
-  };
-
-  const formatDuration = (size: number) => {
-    // Rough estimate: 1MB ≈ 1 minute at 128kbps
-    const minutes = Math.round(size / 1024 / 1024);
-    if (minutes < 1) return "< 1 min";
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}:${mins.toString().padStart(2, "0")}`;
   };
 
   if (isLoading) {
@@ -131,7 +112,7 @@ export default function SongList({
                     ? "bg-[#282828]"
                     : "hover:bg-white/5"
                 }`}
-                onClick={() => onSongSelect(song)}
+                onClick={() => playSong(song)}
               >
                 {/* Index / Play button */}
                 <div className="w-8 text-center flex items-center justify-center">
@@ -166,7 +147,7 @@ export default function SongList({
                     <Link
                       href={`/songs/${encodeURIComponent(song.key)}`}
                       onClick={(e) => e.stopPropagation()}
-                      className={`text-sm font-medium truncate hover:underline ${
+                      className={`text-sm font-medium truncate hover:underline block ${
                         isCurrentSong ? "text-[#1db954]" : "text-white"
                       }`}
                     >

@@ -1,22 +1,18 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import React, { Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Music2, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AudioPlayer from "@/components/AudioPlayer";
 import SongList from "@/components/SongList";
 import NewestSongs from "@/components/NewestSongs";
-import { Song } from "@/lib/r2";
-import { trackPlay } from "@/lib/supabase";
+import { usePlayer } from "@/components/PlayerProvider";
 
 function HomeContent() {
   const searchParams = useSearchParams();
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { songs, setSongs, playSong } = usePlayer();
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   const fetchSongs = useCallback(async () => {
     try {
@@ -33,7 +29,7 @@ function HomeContent() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setSongs]);
 
   useEffect(() => {
     fetchSongs();
@@ -45,26 +41,9 @@ function HomeContent() {
     if (!playKey || songs.length === 0) return;
     const song = songs.find((s) => s.key === decodeURIComponent(playKey));
     if (song) {
-      setCurrentSong(song);
-      setIsPlaying(true);
+      playSong(song);
     }
-  }, [searchParams, songs]);
-
-  const handleSongSelect = useCallback((song: Song) => {
-    setCurrentSong((prev) => {
-      if (prev?.key === song.key) {
-        setIsPlaying((p) => !p);
-        return prev;
-      }
-      setIsPlaying(true);
-      trackPlay(song.key, song.title);
-      return song;
-    });
-  }, []);
-
-  const handleTogglePlay = useCallback(() => {
-    setIsPlaying((prev) => !prev);
-  }, []);
+  }, [searchParams, songs, playSong]);
 
   return (
     <main className="min-h-screen bg-[#121212] text-white pb-32">
@@ -118,32 +97,13 @@ function HomeContent() {
 
       <div className="max-w-5xl mx-auto px-6">
         {/* Newest Songs */}
-        {!error && (
-          <NewestSongs
-            currentSong={currentSong}
-            isPlaying={isPlaying}
-            onSongSelect={handleSongSelect}
-          />
-        )}
+        {!error && <NewestSongs />}
 
         {/* Song List */}
         <SongList
-          songs={songs}
-          currentSong={currentSong}
-          isPlaying={isPlaying}
-          onSongSelect={handleSongSelect}
           isLoading={isLoading}
         />
       </div>
-
-      {/* Audio Player */}
-      <AudioPlayer
-        currentSong={currentSong}
-        songs={songs}
-        isPlaying={isPlaying}
-        onTogglePlay={handleTogglePlay}
-        onSongChange={handleSongSelect}
-      />
     </main>
   );
 }

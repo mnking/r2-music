@@ -3,20 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Play, Clock, Pause } from "lucide-react";
-import { Song } from "@/lib/r2";
+import { usePlayer } from "@/components/PlayerProvider";
 
-interface NewestSongsProps {
-  currentSong: Song | null;
-  isPlaying: boolean;
-  onSongSelect: (song: Song) => void;
-}
-
-export default function NewestSongs({
-  currentSong,
-  isPlaying,
-  onSongSelect,
-}: NewestSongsProps) {
-  const [songs, setSongs] = useState<Song[]>([]);
+export default function NewestSongs() {
+  const { songs, currentSong, isPlaying, playSong } = usePlayer();
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredSong, setHoveredSong] = useState<string | null>(null);
 
@@ -26,7 +16,8 @@ export default function NewestSongs({
       const response = await fetch("/api/songs/newest");
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
-      setSongs(data.songs || []);
+      // We just need to trigger the fetch - songs are managed by context
+      // But we don't set them here anymore since context handles it
     } catch (error) {
       console.error("Error fetching newest songs:", error);
     } finally {
@@ -53,16 +44,19 @@ export default function NewestSongs({
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  if (isLoading) {
+  // Get top 10 newest from context songs
+  const newestSongs = songs
+    .slice()
+    .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
+    .slice(0, 10);
+
+  if (isLoading && songs.length === 0) {
     return (
       <div className="mb-8">
         <div className="h-8 bg-[#181818] rounded animate-pulse w-48 mb-5" />
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-[#181818] rounded-lg p-4 animate-pulse"
-            >
+            <div key={i} className="bg-[#181818] rounded-lg p-4 animate-pulse">
               <div className="w-full aspect-square bg-[#282828] rounded-md mb-4" />
               <div className="h-4 bg-[#282828] rounded w-3/4 mb-2" />
               <div className="h-3 bg-[#282828] rounded w-1/2" />
@@ -73,7 +67,7 @@ export default function NewestSongs({
     );
   }
 
-  if (songs.length === 0) return null;
+  if (newestSongs.length === 0) return null;
 
   return (
     <div className="mb-10">
@@ -82,32 +76,24 @@ export default function NewestSongs({
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {songs.map((song) => {
+        {newestSongs.map((song) => {
           const isCurrent = currentSong?.key === song.key;
           const isHovered = hoveredSong === song.key;
           return (
             <div
               key={song.key}
               className="group relative bg-[#181818] hover:bg-[#282828] rounded-lg p-4 cursor-pointer transition-colors duration-300"
-              onClick={() => onSongSelect(song)}
+              onClick={() => playSong(song)}
               onMouseEnter={() => setHoveredSong(song.key)}
               onMouseLeave={() => setHoveredSong(null)}
             >
-              {/* Album art placeholder */}
               <div className="relative w-full aspect-square bg-[#282828] group-hover:bg-[#383838] rounded-md mb-4 flex items-center justify-center transition-colors">
-                <svg
-                  className="w-12 h-12 text-[#535353]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                >
+                <svg className="w-12 h-12 text-[#535353]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                   <path d="M9 18V5l12-2v13" />
                   <circle cx="6" cy="18" r="3" />
                   <circle cx="18" cy="16" r="3" />
                 </svg>
 
-                {/* Play button overlay */}
                 <div
                   className={`absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full flex items-center justify-center shadow-lg shadow-black/30 transition-all duration-300 ${
                     isHovered || isCurrent
@@ -122,7 +108,6 @@ export default function NewestSongs({
                   )}
                 </div>
 
-                {/* Playing indicator */}
                 {isCurrent && isPlaying && !isHovered && (
                   <div className="absolute bottom-2 right-2 flex gap-0.5 items-end h-4 bg-black/60 rounded px-1.5 py-1">
                     <div className="w-0.5 bg-[#1db954] animate-[bounce_1s_infinite] h-2" />
@@ -132,14 +117,15 @@ export default function NewestSongs({
                 )}
               </div>
 
-              {/* Info */}
-              <h3
-                className={`text-sm font-semibold truncate mb-1 ${
+              <Link
+                href={`/songs/${encodeURIComponent(song.key)}`}
+                onClick={(e) => e.stopPropagation()}
+                className={`text-sm font-semibold truncate mb-1 hover:underline block ${
                   isCurrent ? "text-[#1db954]" : "text-white"
                 }`}
               >
                 {song.title}
-              </h3>
+              </Link>
               <div className="flex items-center gap-1.5 text-xs text-[#b3b3b3]">
                 <Clock className="w-3 h-3" />
                 <span>{formatDate(song.lastModified)}</span>

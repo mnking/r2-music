@@ -16,20 +16,24 @@ import { Song } from "@/lib/r2";
 interface AudioPlayerProps {
   currentSong: Song | null;
   songs: Song[];
+  isPlaying: boolean;
+  onTogglePlay: () => void;
   onSongChange: (song: Song) => void;
 }
 
 export default function AudioPlayer({
   currentSong,
   songs,
+  isPlaying,
+  onTogglePlay,
   onSongChange,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
+  const hasInteracted = useRef(false);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -37,26 +41,35 @@ export default function AudioPlayer({
     }
   }, [volume, isMuted]);
 
+  // Load new song when currentSong changes
   useEffect(() => {
     if (currentSong && audioRef.current) {
       audioRef.current.src = currentSong.url;
       audioRef.current.load();
-      if (isPlaying) {
-        audioRef.current.play().catch(() => setIsPlaying(false));
-      }
+      hasInteracted.current = false;
     }
-  }, [currentSong]);
+  }, [currentSong?.key]);
+
+  // Sync play/pause state with audio element
+  useEffect(() => {
+    if (!audioRef.current || !currentSong) return;
+    if (isPlaying) {
+      const playPromise = audioRef.current.play();
+      if (playPromise) {
+        playPromise.catch((err) => {
+          console.warn("Play failed:", err.message);
+          onTogglePlay();
+        });
+      }
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying, currentSong?.key]);
 
   const togglePlay = useCallback(() => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play().catch(() => setIsPlaying(false));
-      setIsPlaying(true);
-    }
-  }, [isPlaying]);
+    if (!currentSong) return;
+    onTogglePlay();
+  }, [currentSong, onTogglePlay]);
 
   const handleTimeUpdate = useCallback(() => {
     if (audioRef.current) {
@@ -95,7 +108,6 @@ export default function AudioPlayer({
     const currentIndex = songs.findIndex((s) => s.key === currentSong.key);
     const nextIndex = (currentIndex + 1) % songs.length;
     onSongChange(songs[nextIndex]);
-    setIsPlaying(true);
   }, [currentSong, songs, onSongChange]);
 
   const playPrevious = useCallback(() => {
@@ -103,7 +115,6 @@ export default function AudioPlayer({
     const currentIndex = songs.findIndex((s) => s.key === currentSong.key);
     const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
     onSongChange(songs[prevIndex]);
-    setIsPlaying(true);
   }, [currentSong, songs, onSongChange]);
 
   const handleEnded = useCallback(() => {
@@ -124,8 +135,8 @@ export default function AudioPlayer({
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPlay={() => {}}
+        onPause={() => {}}
       />
 
       <div className="flex items-center justify-between max-w-screen-2xl mx-auto gap-4">

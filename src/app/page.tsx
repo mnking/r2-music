@@ -49,6 +49,10 @@ export default function Home() {
     });
   }, []);
 
+  const handleTogglePlay = useCallback(() => {
+    setIsPlaying((prev) => !prev);
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#121212] text-white pb-32">
       {/* Hero gradient header */}
@@ -123,6 +127,8 @@ export default function Home() {
       <AudioPlayer
         currentSong={currentSong}
         songs={songs}
+        isPlaying={isPlaying}
+        onTogglePlay={handleTogglePlay}
         onSongChange={handleSongSelect}
       />
     </main>

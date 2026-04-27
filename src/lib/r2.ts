@@ -35,7 +35,7 @@ export interface Song {
   key: string;
   title: string;
   size: number;
-  lastModified: Date;
+  lastModified: string;
   url: string;
 }
 
@@ -64,7 +64,7 @@ export async function listSongs(prefix?: string): Promise<Song[]> {
       key: obj.Key!,
       title: sanitizeTitle(obj.Key!),
       size: obj.Size || 0,
-      lastModified: obj.LastModified || new Date(),
+      lastModified: (obj.LastModified || new Date()).toISOString(),
       url: "", // Will be populated later
     })) || [];
 
@@ -79,7 +79,7 @@ export async function listSongs(prefix?: string): Promise<Song[]> {
 export async function getNewestSongs(limit: number = 10): Promise<Song[]> {
   const songs = await listSongs();
   return songs
-    .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
+    .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime())
     .slice(0, limit);
 }
 
@@ -104,7 +104,7 @@ export async function getSongByKey(key: string): Promise<Song | null> {
     key: obj.Key!,
     title: sanitizeTitle(obj.Key!),
     size: obj.Size || 0,
-    lastModified: obj.LastModified || new Date(),
+    lastModified: (obj.LastModified || new Date()).toISOString(),
     url: await getSongUrl(obj.Key!),
   };
 }

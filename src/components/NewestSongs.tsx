@@ -29,7 +29,7 @@ export default function NewestSongs() {
     fetchNewest();
   }, [fetchNewest]);
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string) => {
     const d = new Date(date);
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
@@ -47,7 +47,7 @@ export default function NewestSongs() {
   // Get top 10 newest from context songs
   const newestSongs = songs
     .slice()
-    .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
+    .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime())
     .slice(0, 10);
 
   if (isLoading && songs.length === 0) {
